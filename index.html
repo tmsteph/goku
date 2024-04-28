@@ -130,11 +130,9 @@ p{
 </style>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", function () {
     const k = document.querySelector('.kefla');
     const g = document.querySelector('.goku');
-    const cuerpo = document.querySelector('.cuerpo');
     const vida = document.querySelector('.sangre');
     const tempo = document.querySelector('.tiempo');
 
@@ -142,64 +140,104 @@ document.addEventListener("DOMContentLoaded", function () {
     let contar = 0;
     let vidaWidth = 100; // Initial width of the vida bar
 
-    setInterval(() => { 
+    function gameLoop() {
+        updateTimer();
+        createPowers();
+        updatePowers('.poder');
+        updatePowers('.poder2');
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updateTimer() {
         tiempo++;
-        
         if (tiempo % 60 === 0) {
             contar++;
-            tempo.innerHTML = contar;
+            tempo.textContent = contar;
         }
-        
+    }
+
+    function createPowers() {
         if (tiempo % 40 === 0) {
             crearPoder(k, 'poder');
             crearPoder(k, 'poder2');
         }
-        
-        actualizarPoderes('.poder');
-        actualizarPoderes('.poder2');
-
-    }, 1000 / 60);
+    }
 
     function crearPoder(parent, className) {
         let poder = document.createElement('div');
         parent.appendChild(poder);
         poder.className = className;
         poder.style.position = 'absolute';
-        poder.style.left = '0';
-        poder.style.top = '0';
+        poder.x = 0;  // Initialize x position
+        poder.y = 0;  // Initialize y position
+        poder.velocityX = Math.random() * 2 - 1;  // Random velocity between -1 and 1
+        poder.velocityY = Math.random() * 2 - 1;  // Random velocity between -1 and 1
     }
 
-    function actualizarPoderes(selector) {
+    function updatePowers(selector) {
         document.querySelectorAll(selector).forEach(poder => {
-            let valor2 = Math.random() * 10;
-            poder.style.transform = `translateX(${valor2}px) translateY(${valor2}px)`;
+            // Update positions based on velocity
+            poder.x += poder.velocityX;
+            poder.y += poder.velocityY;
 
-            let poderRect = poder.getBoundingClientRect();
-            let cuerpoRect = cuerpo.getBoundingClientRect();
+            // Apply the updated position
+            poder.style.transform = `translate(${poder.x}px, ${poder.y}px)`;
 
-            if (poderRect.right > window.innerWidth || poderRect.bottom > window.innerHeight) {
+            if (isPowerOutOfView(poder) || isPowerCollidingWithGoku(poder)) {
                 poder.remove();
-            }
-
-            if (poderRect.right > cuerpoRect.left && poderRect.left < cuerpoRect.right &&
-                poderRect.bottom > cuerpoRect.top && poderRect.top < cuerpoRect.bottom) {
-                poder.remove();
-                vidaWidth -= 1;
-                vida.style.width = `${vidaWidth}%`;
-                cuerpo.style.border = "2px solid red";
+                if (isPowerCollidingWithGoku(poder)) {
+                    reduceLife();
+                }
             }
         });
     }
 
-    document.querySelector('.caja').addEventListener('touchstart', (event) => {
-        let touchLocation = event.touches[0];
-        g.style.left = `${touchLocation.clientX - 65}px`; // Center Goku on touch
-        g.style.top = `${touchLocation.clientY - 65}px`;
-    });
+    function isPowerOutOfView(poder) {
+        let rect = poder.getBoundingClientRect();
+        return rect.right > window.innerWidth || rect.bottom > window.innerHeight;
+    }
 
-    document.querySelector('.caja').addEventListener('touchend', () => {
-        g.classList.toggle('goku2'); // Toggle goku2 class on touch end
-    });
+    function isPowerCollidingWithGoku(poder) {
+        let poderRect = poder.getBoundingClientRect();
+        let gokuRect = g.getBoundingClientRect();
+        return poderRect.right > gokuRect.left && poderRect.left < gokuRect.right &&
+               poderRect.bottom > gokuRect.top && poderRect.top < gokuRect.bottom;
+    }
+
+    function reduceLife() {
+        vidaWidth -= 1;
+        vida.style.width = `${vidaWidth}%`;
+        g.style.border = "2px solid red";
+    }
+
+    function setupControls() {
+        // Mouse click event
+        document.querySelector('.caja').addEventListener('click', (event) => {
+            g.style.left = `${event.clientX - g.offsetWidth / 2}px`;
+            g.style.top = `${event.clientY - g.offsetHeight / 2}px`;
+        });
+
+        // Keyboard arrow keys event
+        window.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowLeft':
+                    g.style.left = `${g.offsetLeft - 10}px`;
+                    break;
+                case 'ArrowRight':
+                    g.style.left = `${g.offsetLeft + 10}px`;
+                    break;
+                case 'ArrowUp':
+                    g.style.top = `${g.offsetTop - 10}px`;
+                    break;
+                case 'ArrowDown':
+                    g.style.top = `${g.offsetTop + 10}px`;
+                    break;
+            }
+        });
+    }
+
+    setupControls();
+    requestAnimationFrame(gameLoop);
 });
 
 </script>
