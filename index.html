@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function gameLoop() {
         updateTimer();
+        moveKeflaRandomly();
         createPowers();
         updatePowers('.poder');
         updatePowers('.poder2');
@@ -156,8 +157,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function moveKeflaRandomly() {
+        if (tiempo % 100 === 0) {  // Move Kefla every 100 frames
+            let newX = Math.random() * (window.innerWidth - k.offsetWidth);
+            let newY = Math.random() * (window.innerHeight - k.offsetHeight);
+            k.style.left = `${newX}px`;
+            k.style.top = `${newY}px`;
+        }
+    }
+
     function createPowers() {
-        if (tiempo % 40 === 0) {
+        if (tiempo % 40 === 0) {  // Generate powers periodically
             crearPoder(k, 'poder');
             crearPoder(k, 'poder2');
         }
@@ -168,19 +178,16 @@ document.addEventListener("DOMContentLoaded", function () {
         parent.appendChild(poder);
         poder.className = className;
         poder.style.position = 'absolute';
-        poder.x = 0;  // Initialize x position
-        poder.y = 0;  // Initialize y position
+        poder.x = 0;  // Initialize x position relative to parent
+        poder.y = 0;  // Initialize y position relative to parent
         poder.velocityX = Math.random() * 2 - 1;  // Random velocity between -1 and 1
         poder.velocityY = Math.random() * 2 - 1;  // Random velocity between -1 and 1
     }
 
     function updatePowers(selector) {
         document.querySelectorAll(selector).forEach(poder => {
-            // Update positions based on velocity
             poder.x += poder.velocityX;
             poder.y += poder.velocityY;
-
-            // Apply the updated position
             poder.style.transform = `translate(${poder.x}px, ${poder.y}px)`;
 
             if (isPowerOutOfView(poder) || isPowerCollidingWithGoku(poder)) {
